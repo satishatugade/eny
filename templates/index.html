@@ -132,22 +132,31 @@ button:hover {
             var startYearSelect = $("#start_year");
             var endYearSelect = $("#end_year");
 
-            for (var year = currentYear; year >= 1985; year--) {
+            // for (var year = currentYear; year >= 2001; year--) {
+            //     startYearSelect.append('<option value="' + year + '">' + year + '</option>');
+            //     endYearSelect.append('<option value="' + year + '">' + year + '</option>');
+            // }
+            for (var year = 2001; year <= currentYear; year++) {
                 startYearSelect.append('<option value="' + year + '">' + year + '</option>');
+            }
+
+            for (var year = currentYear; year >= 2001; year--) {
                 endYearSelect.append('<option value="' + year + '">' + year + '</option>');
             }
 
             // Set default selected values
-            startYearSelect.val(currentYear);
+            startYearSelect.val(2002);
             endYearSelect.val(currentYear);
 
             var districts = [
-                "अहमदनगर", "अकोला", "अमरावती", "औरंगाबाद", "बीड", "भंडारा", "बुलढाणा",
-                "चंद्रपूर", "धुळे", "गडचिरोली", "गोंदिया", "हिंगोली", "जळगाव", "जालना",
-                "कोल्हापूर", "लातूर", "मुंबई", "मुंबई उपनगर", "नागपूर", "नांदेड", "नंदुरबार",
-                "नाशिक", "उस्मानाबाद", "पालघर", "परभणी", "पुणे", "रायगड", "रत्नागिरी",
-                "सांगली", "सातारा", "सिंधुदुर्ग", "सोलापूर", "ठाणे", "वर्धा", "वाशीम", "यवतमाळ"
+                "पुणे", "नाशिक", "जळगाव", "धुळे", "अहिल्यानगर", "छत्रपती संभाजीनगर",
+                "जालना", "बीड", "लातूर", "नांदेड", "परभणी", "सातारा", "धाराशिव",
+                "अमरावती", "यवतमाळ", "अकोला", "बुलडाणा", "नागपूर", "वर्धा", 
+                "चंद्रपूर", "भंडारा", "गडचिरोली", "सांगली", "गोंदिया", "वाशिम", 
+                "हिंगोली", "नंदुरबार", "कोल्हापूर", "सोलापूर", "ठाणे", "पालघर",
+                "रायगड", "रत्नागिरी", "सिंधुदुर्ग"
             ];
+
 
             var districtSelect = $("#district_name");
             $.each(districts, function(index, district) {

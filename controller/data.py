@@ -165,8 +165,8 @@ def save_data_to_db(data, year, district, taluka, village_name, property_no, pag
         for _, row in df.iterrows():
             try:
                 cur.execute("""
-                    INSERT INTO rest_of_maharashtra_name_based_searching (year, district, taluka, village_name, property_no, page_no, attempt,
-                    docno, docket_name, r_date, sro_name, seller_name, purchaser_name, property_description, sro_code, status, indexII)
+                    INSERT INTO rest_of_maharashtra (docno, docket_name, r_date, sro_name, seller_name, purchaser_name, property_description,
+                    sro_code, status, indexII, year, district, taluka, village_name, property_no, page_no, attempt)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, tuple(row))
                 conn.commit()
@@ -261,7 +261,7 @@ def enter_captcha_and_search(driver, wait, taluka, village_name, property_num, d
 
             elif driver.find_elements(By.ID, 'lblMsgCTS1'):
                 print(" No records found.")
-                take_screenshot(driver, year, district, taluka, village_name, property_num)
+                # take_screenshot(driver, year, district, taluka, village_name, property_num)
                 save_data_to_db([], year, district, taluka, village_name, property_num, 0, attempt)
                 cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
                 cancel_button.click()
@@ -272,7 +272,7 @@ def enter_captcha_and_search(driver, wait, taluka, village_name, property_num, d
 
         except Exception as e:
             print(f"Error during attempt {attempt}: {e}")
-            take_screenshot(driver, year, district, taluka, village_name, property_num)
+            # take_screenshot(driver, year, district, taluka, village_name, property_num)
             time.sleep(5)
             wait_for_update_progress(wait)
 
@@ -436,54 +436,65 @@ def scrape_all_pages(wait,driver, district, taluka, village_name, property_no, a
                 save_data_to_db(data, year, district, taluka, village_name, property_no, last_page_num, attempt)
                 write_progress(taluka, property_no, village_name, last_page_num, year, district)
                 current_retry = 0
-                pagination_table = driver.find_element(By.XPATH, "//tr[@align='left' and @style='color:Black;background-color:#CCCCCC;']")
-                page_links = pagination_table.find_elements(By.TAG_NAME, 'td')
-                next_page_found = False
+                try:
+                    pagination_table = driver.find_element(By.XPATH, "//tr[@align='left' and @style='color:Black;background-color:#CCCCCC;']")
+                    page_links = pagination_table.find_elements(By.TAG_NAME, 'td')
+                    next_page_found = False
 
-                for td in page_links:
-                    if td.find_elements(By.TAG_NAME, 'span'):
-                        span_text = td.find_element(By.TAG_NAME, 'span').text.strip()
-                        if span_text.isdigit():
-                            span_value = int(span_text)
-                            print(f"Currently on page: {span_value}")
+                    for td in page_links:
+                        if td.find_elements(By.TAG_NAME, 'span'):
+                            span_text = td.find_element(By.TAG_NAME, 'span').text.strip()
+                            if span_text.isdigit():
+                                span_value = int(span_text)
+                                print(f"Currently on page: {span_value}")
 
-                    if td.find_elements(By.TAG_NAME, 'a'):
-                        page_text = td.text.strip()
+                        if td.find_elements(By.TAG_NAME, 'a'):
+                            page_text = td.text.strip()
 
-                        # Handle "..." to load more pages
-                        if page_text == "...":
-                            if last_page_num % 10 == 0:
-                                print("Clicking '...' to load more pages.")
-                                td.find_element(By.TAG_NAME, 'a').click()
-                                WebDriverWait(driver, 20).until(EC.staleness_of(table))
-                                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'RegistrationGrid')))
-                                last_page_num += 1
-                                next_page_found = True
-                                break
-                            else:
-                                continue
+                            # Handle "..." to load more pages
+                            if page_text == "...":
+                                if last_page_num % 10 == 0:
+                                    print("Clicking '...' to load more pages.")
+                                    td.find_element(By.TAG_NAME, 'a').click()
+                                    WebDriverWait(driver, 20).until(EC.staleness_of(table))
+                                    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'RegistrationGrid')))
+                                    last_page_num += 1
+                                    next_page_found = True
+                                    break
+                                else:
+                                    continue
 
-                        # Handle numeric page navigation
-                        if page_text.isdigit():
-                            page_num = int(page_text)
+                            # Handle numeric page navigation
+                            if page_text.isdigit():
+                                page_num = int(page_text)
 
-                            if page_num > last_page_num:
-                                print(f"Clicking page: {page_num}")
-                                td.find_element(By.TAG_NAME, 'a').click()
-                                WebDriverWait(driver, 20).until(EC.staleness_of(table))
-                                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'RegistrationGrid')))
-                                last_page_num = page_num
-                                next_page_found = True
-                                break
+                                if page_num > last_page_num:
+                                    print(f"Clicking page: {page_num}")
+                                    td.find_element(By.TAG_NAME, 'a').click()
+                                    WebDriverWait(driver, 20).until(EC.staleness_of(table))
+                                    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'RegistrationGrid')))
+                                    last_page_num = page_num
+                                    next_page_found = True
+                                    break
 
-                if not next_page_found:
-                    print("No more pages found.")
-                    cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
-                    cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
-                    cancel_button.click()
-                    print("Clicked the cancel button to reset the form.")
-                    time.sleep(5)
-                    break
+                    if not next_page_found:
+                        print("No more pages found.")
+                        cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
+                        cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
+                        cancel_button.click()
+                        print("Clicked the cancel button to reset the form.")
+                        time.sleep(5)
+                        break
+                except Exception as e:
+                    print(f"Error paging : {e}")
+                    if not next_page_found:
+                        print("No more pages found.")
+                        cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
+                        cancel_button = wait.until(EC.element_to_be_clickable((By.ID, "btnCancel_RestMaha")))
+                        cancel_button.click()
+                        print("Clicked the cancel button to reset the form.")
+                        time.sleep(5)
+                        break
 
             except Exception as e:
                 print(f"Error scraping page {last_page_num}: {e}")
@@ -608,6 +619,7 @@ def change_dropdown_and_crawl(
     options = webdriver.ChromeOptions()
     options.add_argument("--disable-popup-blocking")
     driver = webdriver.Chrome(options=options)
+    driver.maximize_window()
     driver.implicitly_wait(30)
 
     try:

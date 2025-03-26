@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Data Scraper</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #e3f2fd, #bbdefb); /* Soft blue gradient */
+    color: #333; /* Dark gray for readability */
+    text-align: center;
+    padding: 20px;
+}
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #0d47a1; /* Deep blue */
+}
+
+.form-container {
+    background: white;
+    color: black;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.15);
+    display: inline-block;
+    text-align: left;
+    width: 420px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-top: 12px;
+    color: #1565c0; /* Blue for labels */
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #42a5f5; /* Lighter blue */
+    outline: none;
+    box-shadow: 0 0 5px rgba(66, 165, 245, 0.5);
+}
+
+button {
+    background: linear-gradient(to right, #1565c0, #1e88e5);
+    color: white;
+    border: none;
+    padding: 14px;
+    margin-top: 15px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(to right, #1e88e5, #42a5f5);
+    transform: scale(1.02);
+}
+
+#response {
+    margin-top: 20px;
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    width: 420px;
+    display: inline-block;
+    word-break: break-word;
+    color: green;
+}
+
+    </style>
+</head>
+<body>
+
+    <h2>🏠 Property Data Scraper</h2>
+
+    <div class="form-container">
+        <form id="scraper-form">
+            <label>URL:</label>
+            <input type="text" name="url" value="https://freesearchigrservice.maharashtra.gov.in/" readonly required>
+
+            <label>Start Year:</label>
+            <select name="start_year" id="start_year" required></select>
+
+            <label>End Year:</label>
+            <select name="end_year" id="end_year" required></select>
+
+            <label>District Name:</label>
+            <select name="district_name" id="district_name" required></select>
+
+            <label>Start Number:</label>
+            <input type="number" name="start_number" value="1" required>
+
+            <label>End Number:</label>
+            <input type="number" name="end_number" value="9" required>
+
+            <label>First Name:</label>
+            <input type="text" name="first_name">
+
+            <label>Last Name:</label>
+            <input type="text" name="last_name">
+
+            <button type="submit">🚀 Start Scraping</button>
+        </form>
+    </div>
+
+    <h3>Response:</h3>
+    <div id="response"></div>
+
+    <script>
+        $(document).ready(function () {
+            // Generate year dropdown (current year first, 1985 last)
+            var currentYear = new Date().getFullYear();
+            var startYearSelect = $("#start_year");
+            var endYearSelect = $("#end_year");
+
+            for (var year = currentYear; year >= 1985; year--) {
+                startYearSelect.append('<option value="' + year + '">' + year + '</option>');
+                endYearSelect.append('<option value="' + year + '">' + year + '</option>');
+            }
+
+            // Set default selected values
+            startYearSelect.val(currentYear);
+            endYearSelect.val(currentYear);
+
+            var districts = [
+                "अहमदनगर", "अकोला", "अमरावती", "औरंगाबाद", "बीड", "भंडारा", "बुलढाणा",
+                "चंद्रपूर", "धुळे", "गडचिरोली", "गोंदिया", "हिंगोली", "जळगाव", "जालना",
+                "कोल्हापूर", "लातूर", "मुंबई", "मुंबई उपनगर", "नागपूर", "नांदेड", "नंदुरबार",
+                "नाशिक", "उस्मानाबाद", "पालघर", "परभणी", "पुणे", "रायगड", "रत्नागिरी",
+                "सांगली", "सातारा", "सिंधुदुर्ग", "सोलापूर", "ठाणे", "वर्धा", "वाशीम", "यवतमाळ"
+            ];
+
+            var districtSelect = $("#district_name");
+            $.each(districts, function(index, district) {
+                districtSelect.append('<option value="' + district + '">' + district + '</option>');
+            });
+
+            districtSelect.val("पुणे");
+
+            // Submit form using AJAX
+            $("#scraper-form").submit(function (event) {
+                event.preventDefault();
+
+                var formData = {
+                    url: $("input[name='url']").val(),
+                    start_year: $("select[name='start_year']").val(),
+                    end_year: $("select[name='end_year']").val(),
+                    district_name: $("select[name='district_name']").val(),
+                    start_number: $("input[name='start_number']").val(),
+                    end_number: $("input[name='end_number']").val(),
+                    first_name: $("input[name='first_name']").val(),
+                    last_name: $("input[name='last_name']").val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: "/start-scraper",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        $("#response").html("<pre style='color:green;'>" + JSON.stringify(response.message, null, 4) + "</pre>");
+                    },
+                    error: function () {
+                        $("#response").html("<p style='color:red;'>❌ Error occurred while scraping!</p>");
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
